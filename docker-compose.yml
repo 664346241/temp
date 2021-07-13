@@ -1,0 +1,32 @@
+version: '2'
+services:
+  shadowsocks:
+    image: shadowsocks/shadowsocks-libev
+    container_name: shadowsocks
+    restart: always
+    ports:
+      - "8388:8388"
+      - "8388:8388/udp"
+    environment:
+      - PASSWORD=dasdasdxzcadas
+      - METHOD=aes-256-gcm
+      - TIMEOUT=3000
+      - SERVER_ADDR=0.0.0.0
+      - SERVER_ADDR_IPV6=::0
+      - DNS_ADDRS=8.8.8.8,8.8.4.4
+    networks:
+      - vpn
+  kcptun:
+    image: xtaci/kcptun
+    container_name: kcptun
+    restart: always
+    ports:
+      - "29900:29900/udp"
+    depends_on:
+      - shadowsocks
+    command: server -t "serverip:8388" -l "0.0.0.0:29900" -key "密码" -crypt salsa20 -datashard 10 -parityshard 3 -mtu 1350 -sndwnd 512 -rcvwnd 512 -dscp 0 -mode fast3
+    networks:
+      - vpn
+networks:
+  vpn:
+    external: true
